@@ -34,14 +34,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define O_BINARY 0
 #endif
 
-static int cmd_printmap(struct fuserescue* fr, int argc, char* argv[argc]){
-  (void)argv;
-  pthread_mutex_lock(&fr->lock);
-  map_write(fr->map,STDOUT_FILENO);
-  pthread_mutex_unlock(&fr->lock);
-  return 0;
-}
-
 static int cmd_reopen(struct fuserescue* fr, int argc, char* argv[argc]){
   if(argc > 2){
     printf("usage: %s [infile]",argv[0]);
@@ -182,6 +174,24 @@ static int cmd_loglevel(struct fuserescue* fr, int argc, char* argv[argc]){
   return 0;
 }
 
+static int cmd_show(struct fuserescue* fr, int argc, char* argv[argc]){
+  if(argc != 2)
+    goto usage;
+
+  if(!strcmp("map",argv[1])){
+    pthread_mutex_lock(&fr->lock);
+    map_write(fr->map,STDOUT_FILENO);
+    pthread_mutex_unlock(&fr->lock);
+  }else if(!strcmp("license",argv[1])){
+    puts(license);
+  }else goto usage;
+
+  return 0;
+usage:
+  printf("usage: %s map|license\n",argv[0]);
+  return 1;
+}
+
 struct commands {
   const char* name;
   int (*function)(struct fuserescue* fr,int argc, char* argv[argc]);
@@ -195,7 +205,7 @@ static struct commands command_list[] = {
   {"save",cmd_save,"Saves the mapfile"},
   {"exit",cmd_exit,"Exits the program"},
   {"recovery",cmd_recovery,"Allow reading from device to backup. Arguments: allow|denay|show [nontried|nontrimed|nonscraped|badsector]"},
-  {"printmap",cmd_printmap,"Write the mapfile to stdout"},
+  {"show",cmd_show,"You can display the following:\n\tmap: the mapfile.\n\tlicense: the license"},
   {"reopen",cmd_reopen,"Reopen mapfile. You can optionally specify the file if it changed location"},
   {"blocksize",cmd_blocksize,"Get or set biggest unit of data tried to recover at once."},
   {"loglevel",cmd_loglevel,"Get or set loglevel\n"}
@@ -216,8 +226,17 @@ static int cmd_help(struct fuserescue* fr, int argc, char* argv[argc]){
 void* cmd_controller(void* param){
   struct fuserescue* fr = param;
   static char buffer[1024];
-  printf("fuserescue shell. Type help and list of commands\n");
-  printf("> ");
+  printf(
+    "fuserescue  Copyright (C) 2018  Daniel Abrecht\n"
+    "\n"
+    "This program comes with ABSOLUTELY NO WARRANTY\n"
+    "This is free software, and you are welcome to redistribute it\n"
+    "under certain conditions; type 'show license' for details.\n"
+    "\n"
+    "For a list of all commands, type help.\n"
+    "\n"
+    "> "
+  );
   fflush(stdout);
   char* s;
   while((s=fgets(buffer,sizeof(buffer),stdin))){

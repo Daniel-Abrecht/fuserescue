@@ -47,6 +47,9 @@ struct fuserescue {
   enum loglevel loglevel;
 };
 
+extern const char license[];
+extern const size_t license_size;
+
 void fr_save_map(struct fuserescue* fr);
 
 #endif
