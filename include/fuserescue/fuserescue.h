@@ -37,6 +37,7 @@ struct fuserescue {
   pthread_mutex_t lock;
   int infile, outfile;
   const char* infile_path;
+  bool infile_directio;
   uint64_t size, offset, blocksize;
   struct mapfile* map;
   const char* mapfile;

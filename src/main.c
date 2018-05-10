@@ -45,7 +45,7 @@ static char readbuffer[DIRECTIO_BUFFER_SIZE] __attribute__ ((__aligned__ (4096))
 
 void fr_save_map(struct fuserescue* fr){
   pthread_mutex_lock(&fr->lock);
-  int mapfd = open(fr->mapfile,O_CREAT|O_WRONLY|O_TRUNC|O_BINARY);
+  int mapfd = open(fr->mapfile,O_CREAT|O_WRONLY|O_TRUNC|O_BINARY,0660);
   if(mapfd==-1){
     perror("failed to open mapfile");
     exit(5);
@@ -320,11 +320,32 @@ static struct fuse_operations fr_oper = {
 
 
 int main(int argc, char* argv[]){
+  bool infile_directio = true;
+  bool fuse_directio = false;
+  for(int i=1; i<argc; i++){
+    if(!strcmp(argv[i],"--infile-no-direct-io")){
+      infile_directio = false;
+    }else if(!strcmp(argv[i],"--fuse-direct-io")){
+      fuse_directio = true;
+    }else if(argv[i][0] == '-'){
+      goto wrongargs;
+    }else continue;
+    memmove(argv+i,argv+i+1,(argc-i-1)*sizeof(char**));
+    i--;
+    argc--;
+  }
   if(argc<5||argc>7){
-    fprintf(stderr,"Usage: %s infile outfile mapfile mountpoint [offset] [size]\n",argv[0]);
+  wrongargs:;
+    fprintf(stderr,"Usage: %s [--infile-no-direct-io|--fuse-direct-io] infile outfile mapfile mountpoint [offset] [size]\n",argv[0]);
     return 1;
   }
-  int infile = open( argv[1], O_RDONLY | O_DIRECT | O_BINARY );
+  int infile;
+  {
+    int flags = O_RDONLY | O_BINARY;
+    if(infile_directio)
+      flags |= O_DIRECT;
+    infile = open( argv[1], flags );
+  }
   if(infile == -1){
     perror("Failed to open input file");
     return 1;
@@ -388,6 +409,7 @@ int main(int argc, char* argv[]){
     .outfile = outfile,
     .offset = offset,
     .infile_path = strdup(argv[1]),
+    .infile_directio = infile_directio,
     .blocksize = sector_size,
     .size = insize,
     .map = map,
@@ -409,10 +431,16 @@ int main(int argc, char* argv[]){
   char* options[] = {
     argv[0], "-s", "-f", "-o", "ro", "-o", "auto_unmount",
     "-o", "hard_remove", "-o", "max_readahead=0",
-    "-o" "sync_read", "-o", "direct_io",
-    argv[4]
+    "-o" "sync_read",
+    0,0,0
   };
-  struct fuse_args args = FUSE_ARGS_INIT(sizeof(options)/sizeof(*options), options);
+  size_t n = 12;
+  if(fuse_directio){
+    options[n++] = "-o";
+    options[n++] = "direct_io";
+  }
+  options[n++] = argv[4];
+  struct fuse_args args = FUSE_ARGS_INIT(n, options);
   int es = fuse_main(args.argc, args.argv, &fr_oper, &params);
   fr_save_map(&params);
   pthread_kill(ctlt,SIGTERM);

@@ -40,7 +40,13 @@ static int cmd_reopen(struct fuserescue* fr, int argc, char* argv[argc]){
     return 1;
   }
   const char* path = argc < 2 ? fr->infile_path : argv[1];
-  int infile = open( path, O_RDONLY | O_DIRECT | O_BINARY );
+  int infile;
+  {
+    int flags = O_RDONLY | O_BINARY;
+    if(fr->infile_directio)
+      flags |= O_DIRECT;
+    infile = open( path, flags );
+  }
   if(infile == -1){
     perror("Failed to open file");
     return 2;
