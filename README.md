@@ -124,20 +124,28 @@ fuserescue [--infile-no-direct-io|--fuse-direct-io] infile outfile mapfile mount
 | `--infile-no-direct-io` | Disable the usage of direct io for reading from the file to recover |
 | `--fuse-direct-io`      | Enable direct io for the virtual fuse file. This prevents the OS mostly from combining and splitting different reads. |
 
+
 ### CLI commands
 
 | Command                | Description |
 | ---------------------- | ----------- |
-| help 	                 | Displays a list of commands |
+| help                   | Displays a list of commands |
 | save [mapfile]         | Saves the mapfile |
-| exit 	                 | Exits the program after the current recovery attempt has finished |
+| exit                   | Exits the program after the current recovery attempt has finished |
 | recovery allow\|deny   | Allow or Deny reading from the file to recover |
 | recovery allow\|deny nontried\|nontrimed\|nonscraped\|badsector | Allow or deny the recovery of areas marked as nontried, nontrimmed, etc. |
 | recovery show          | Show the current state of what the program is allowed to try to recover |
 | show map               | Display the mapfile |
 | show license           | Display the GPL License this program uses |
 | show readme            | Display the readme |
-| reopen [infile]	       | Reopen file to recover. You can optionally specify the file if it changed location |
+| reopen [infile]        | Reopen file to recover. You can optionally specify the file if it changed location |
 | blocksize [number]     | Get or set biggest unit of data tried to recover at once. Decimal, hexadecimal and octal notation are possible |
 | loglevel default\|info | Get or set loglevel. Default only shows errors. Info also shows read attempts from the image and from the file to recover. |
 
+
+### Enironment variables
+
+| Environment variable | Description |
+| -------------------- | ----------- |
+| PAGER                | Set the pager program |
+| MDPAGER              | Set the pager for markdown. Unlike $PAGER, this allows for most regular shell command lines, only the main program should be at the beginning. |

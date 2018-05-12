@@ -193,19 +193,38 @@ static int cmd_show(struct fuserescue* fr, int argc, char* argv[argc]){
     goto usage;
 
   if(!strcmp("map",argv[1])){
+    struct pager pager = pager_create(0,false);
     pthread_mutex_lock(&fr->lock);
-    map_write(fr->map,STDOUT_FILENO);
+    map_write(fr->map,pager.input);
     pthread_mutex_unlock(&fr->lock);
+    pager_close_wait(&pager);
   }else if(!strcmp("license",argv[1])){
-    puts(license);
+    struct pager pager = pager_create(0,false);
+    write(pager.input,license,license_size);
+    pager_close_wait(&pager);
   }else if(!strcmp("readme",argv[1])){
     extern const char readme_md[];
-    puts(readme_md);
+    extern const size_t readme_md_size;
+    int i=0;
+    const char* cmds[7] = {0};
+    const char* mdpager = getenv("MDPAGER");
+    const char* pg = getenv("PAGER");
+    if(mdpager)
+      cmds[i++] = mdpager;
+    cmds[i++] = "markcat /dev/stdin | `which \"$PAGER\" less more cat | sed 's|/less$|/less -R|' | head -n 1`";
+//    cmds[i++] = "mdv -c \"`resize|head -n 1|sed 's/COLUMNS=\\(.*\\);/\\1/'`\" - | `which \"$PAGER\" less more cat | sed 's|/less$|/less -R|' | head -n 1`";
+    if(pg)
+      cmds[i++] = pg;
+    cmds[i++] = "less";
+    cmds[i++] = "more";
+    struct pager pager = pager_create(cmds,true);
+    write(pager.input,readme_md,readme_md_size);
+    pager_close_wait(&pager);
   }else goto usage;
 
   return 0;
 usage:
-  printf("usage: %s map|license\n",argv[0]);
+  printf("usage: %s readme|map|license\n",argv[0]);
   return 1;
 }
 

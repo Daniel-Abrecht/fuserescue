@@ -24,8 +24,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <stdint.h>
 #include <stdbool.h>
 
+struct pager {
+  int pid, input;
+};
+
 bool parseu64(const char** str, uint64_t* ret);
 int u64toa(uint64_t x, char r[18]);
 void skip_spaces(const char** x);
+struct pager pager_create(const char** commands, bool shell);
+void pager_close_wait(struct pager* pager);
+
 
 #endif

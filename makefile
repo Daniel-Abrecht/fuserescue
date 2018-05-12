@@ -32,7 +32,7 @@ build/%.o: %
 	  printf "extern const size_t %s_size;" "$$id"; \
 	  printf "const char %s[] = {" "$$id"; \
 	  cat "$$file" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed 's/.*/  "\0\\n"/'; \
-	  printf "};\nconst size_t %s_size = sizeof(%s);\n" "$$id" "$$id"; \
+	  printf "};\nconst size_t %s_size = sizeof(%s)-1;\n" "$$id" "$$id"; \
 	) | $(LD) -x c - -c -o $@
 
 bin:
