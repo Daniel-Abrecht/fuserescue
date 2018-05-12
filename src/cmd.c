@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
 #include <pthread.h>
@@ -63,8 +64,15 @@ static int cmd_reopen(struct fuserescue* fr, int argc, char* argv[argc]){
 
 
 static int cmd_save(struct fuserescue* fr, int argc, char* argv[argc]){
-  (void)argc;
-  (void)argv;
+  if(argc > 2){
+    printf("usage: %s [destination]",argv[0]);
+    return 1;
+  }
+  if(argc >= 2){
+    if(fr->mapfile)
+      free((void*)fr->mapfile);
+    fr->mapfile = strdup(argv[1]);
+  }
   fr_save_map(fr);
   return 0;
 }
@@ -190,6 +198,9 @@ static int cmd_show(struct fuserescue* fr, int argc, char* argv[argc]){
     pthread_mutex_unlock(&fr->lock);
   }else if(!strcmp("license",argv[1])){
     puts(license);
+  }else if(!strcmp("readme",argv[1])){
+    extern const char readme_md[];
+    puts(readme_md);
   }else goto usage;
 
   return 0;
@@ -208,11 +219,11 @@ static int cmd_help(struct fuserescue* fr, int argc, char* argv[argc]);
 
 static struct commands command_list[] = {
   {"help",cmd_help,"Displays a list of commands"},
-  {"save",cmd_save,"Saves the mapfile"},
+  {"save",cmd_save,"Saves the mapfile You can optionally change the location where the mapfile is saved."},
   {"exit",cmd_exit,"Exits the program"},
   {"recovery",cmd_recovery,"Allow reading from device to backup. Arguments: allow|denay|show [nontried|nontrimed|nonscraped|badsector]"},
-  {"show",cmd_show,"You can display the following:\n\tmap: the mapfile.\n\tlicense: the license"},
-  {"reopen",cmd_reopen,"Reopen mapfile. You can optionally specify the file if it changed location"},
+  {"show",cmd_show,"You can display the following:\n\tmap: the mapfile.\n\tlicense: the license\n\treadme: The readme file"},
+  {"reopen",cmd_reopen,"Reopen the file to recover. You can optionally specify the file if it changed location"},
   {"blocksize",cmd_blocksize,"Get or set biggest unit of data tried to recover at once."},
   {"loglevel",cmd_loglevel,"Get or set loglevel\n"}
 };

@@ -413,7 +413,7 @@ int main(int argc, char* argv[]){
     .blocksize = sector_size,
     .size = insize,
     .map = map,
-    .mapfile = argv[3],
+    .mapfile = strdup(argv[3]),
     .self = pthread_self(),
     .unsaved = false,
     .allowed = false,

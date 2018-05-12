@@ -10,6 +10,7 @@ SOURCES += src/map.c
 SOURCES += src/utils.c
 SOURCES += src/main.c
 SOURCES += LICENSE
+SOURCES += README.md
 
 OBJECTS = $(patsubst %,build/%.o,$(SOURCES))
 
